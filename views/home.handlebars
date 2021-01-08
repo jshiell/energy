@@ -19,6 +19,8 @@
     <button id="fetchData">Fetch Data</button>
     <br>
     <br>
+    <button id="older" disabled>Older</button>
+    <button id="newer" disabled>Newer</button>
 	<div style="width:75%;">
 		<canvas id="canvas"></canvas>
 	</div>
@@ -39,6 +41,8 @@
                 }{{#unless @last}},{{/unless}}
                 {{/each}}
             ];
+
+            var page = 1;
 
             var config = {
                 type: 'line',
@@ -90,11 +94,11 @@
 
             var invokeCallbackOnSuccess = function (request, callback) {
                 return function () {
-                    console.log('Callback handler invoked');
                     if (request.status == 200) {
                         callback(request.response);
                     } else {
                         console.log('Request failed with status ' + request.status);
+                        callback({});
                     }
                 };
             };
@@ -111,11 +115,11 @@
             };
 
             var getGasUsage = function (apiKey, mprn, meterSerialNumber, callback) {
-                queryOctopusUri('/v1/gas-meter-points/' + mprn + '/meters/' + meterSerialNumber + '/consumption/?page=1', apiKey, callback);
+                queryOctopusUri('/v1/gas-meter-points/' + mprn + '/meters/' + meterSerialNumber + '/consumption/?page=' + page, apiKey, callback);
             };
 
             var getElectricityUsage = function (apiKey, mpan, meterSerialNumber, callback) {
-                queryOctopusUri('/v1/electricity-meter-points/' + mpan + '/meters/' + meterSerialNumber + '/consumption/?page=1', apiKey, callback);
+                queryOctopusUri('/v1/electricity-meter-points/' + mpan + '/meters/' + meterSerialNumber + '/consumption/?page=' + page, apiKey, callback);
             };
 
             var pad = function (num, size) {
@@ -144,8 +148,23 @@
                 var kWhConversionFactor = 3.6;
                 return gasVolumeM3 * (correctionFactor || 1.02264) * (calorificValue || 40) / kWhConversionFactor; 
             };
+
+            var newerResults= function () {
+                page -= 1;
+                fetchData();
+            };
+
+            var olderResults = function () {
+                page += 1;
+                fetchData();
+            };
  
             var refreshData = function () {
+                page = 1;
+                fetchData();
+            };
+
+            var fetchData = function () {
                 var propertyName = document.getElementById('property').value;
                 var property = properties.filter(function (candidate) { return candidate.name === propertyName; })[0];
                 if (property === null) {
@@ -153,13 +172,15 @@
                     return;
                 }
 
-                console.log(property);
-
                 getGasUsage(property.apiKey, property.mprn, property.gasSerial, function (data) {
-                    var gasResults = data.results.reverse();
-                    console.log(gasResults);
+                    var gasResults = (data.results || []).reverse();
+
+                    document.getElementById('newer').disabled = !data.previous;
+                    document.getElementById('older').disabled = !data.next;
+
                     getElectricityUsage(property.apiKey, property.mpan, property.electricitySerial, function (data) {
-                        var electricityResults = data.results.reverse();
+                        var electricityResults = (data.results || []).reverse();
+
                         var labels = formatStartIntervals(gasResults).
                             concat(formatStartIntervals(electricityResults)).
                             filter(filterUnique);
@@ -193,6 +214,8 @@
 
             window.onload = setUp;
             document.getElementById('fetchData').addEventListener('click', refreshData);
+            document.getElementById('older').addEventListener('click', olderResults);
+            document.getElementById('newer').addEventListener('click', newerResults);
         })();
 	</script>
 </body>
