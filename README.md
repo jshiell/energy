@@ -6,6 +6,7 @@ A simple web-app to render energy usage from Octopus energy.
 
 This is Git-ignored to avoid leakage. Configure your various properties to query like so in `etc/config.json`:
 
+```
 {
     "properties": [
         {
@@ -22,3 +23,4 @@ This is Git-ignored to avoid leakage. Configure your various properties to query
         ...
     ]
 }
+```
