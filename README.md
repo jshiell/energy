@@ -24,3 +24,12 @@ This is Git-ignored to avoid leakage. Configure your various properties to query
     ]
 }
 ```
+
+
+## Usage
+
+```
+yarn start
+```
+
+The server runs on http://localhost:8080 by default.
