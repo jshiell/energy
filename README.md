@@ -28,7 +28,10 @@ This is Git-ignored to avoid leakage. Configure your various properties to query
 
 ## Usage
 
+You'll need at least [Node 10](https://nodejs.org/en/).
+
 ```
+yarn install
 yarn start
 ```
 
